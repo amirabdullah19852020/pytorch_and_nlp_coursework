@@ -153,10 +153,11 @@ class ParserModel(nn.Module):
         ###     as declared in `__init__` after ReLU function.
         ###
 
-        embedded = self.embedding_lookup(w)
+        embedded = self.embedding_lookup(w).cuda()
         #print(f"embedded shape is {embedded.shape}")
         #print(f"matrix for hidden weight is of shape {self.embed_to_hidden_weight.shape}")
         #print(f"matrix for bias is of shape {self.embed_to_hidden_bias.shape}")
+        print(f"embedded is on {embedded.device}")
 
         hidden = torch.matmul(embedded, self.embed_to_hidden_weight)
         hidden_with_bias = torch.add(hidden, self.embed_to_hidden_bias)
@@ -181,11 +182,12 @@ if __name__ == "__main__":
         inds = torch.randint(0, 100, (4, 36), dtype=torch.long)
         selected = model.embedding_lookup(inds)
         print(f"Selected has shape {selected.shape}")
-        assert np.all(selected.data.numpy() == 0), "The result of embedding lookup: " \
+        assert np.all(selected.data.cpu().numpy() == 0), "The result of embedding lookup: " \
                                       + repr(selected) + " contains non-zero elements."
 
     def check_forward():
-        inputs =torch.randint(0, 100, (4, 36), dtype=torch.long)
+        model.cuda()
+        inputs =torch.randint(0, 100, (4, 36), dtype=torch.long).cuda()
         out = model(inputs)
         expected_out_shape = (4, 3)
         assert out.shape == expected_out_shape, "The result shape of forward is: " + repr(out.shape) + \
